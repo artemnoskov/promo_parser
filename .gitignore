@@ -1,0 +1,18 @@
+# Credentials / secrets
+credentials.json
+token.json
+.env
+
+# Pipeline output
+results/
+seen_ids.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/

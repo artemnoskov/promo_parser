@@ -1,0 +1,25 @@
+version: "0.1"
+
+interests:
+  - mechanical keyboards
+  - camera gear
+  - running shoes
+
+brands_care_about:
+  - Sony
+  - Uniqlo
+
+never_interested_in:
+  - crypto
+  - insurance
+  - timeshares
+  - gambling
+
+price_rules: >
+  Flag only discounts of 30% or more, or clear absolute deals
+  (a genuinely low price on something from my interests).
+
+scoring_rubric: >
+  0.9-1.0 = would act on today; a real, verified-looking deal squarely in my
+  interests. 0.5-0.8 = relevant and plausibly worthwhile. 0.3-0.5 = mildly
+  relevant, weak deal. Below 0.3 = skip entirely.
