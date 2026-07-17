@@ -1,13 +1,22 @@
 version: "0.1"
 
 interests:
-  - mechanical keyboards
-  - camera gear
+  - video games
+  - investment
   - running shoes
 
 brands_care_about:
   - Sony
-  - Uniqlo
+  - Playstation
+  - RBC
+  - Safeway
+  - Tesla
+  - Amazon
+  - Valve
+  - Adidas
+  - Nike
+  - New Balance
+
 
 never_interested_in:
   - crypto
@@ -16,7 +25,7 @@ never_interested_in:
   - gambling
 
 price_rules: >
-  Flag only discounts of 30% or more, or clear absolute deals
+  Flag only discounts of 20% or more, or clear absolute deals
   (a genuinely low price on something from my interests).
 
 scoring_rubric: >

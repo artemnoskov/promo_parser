@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import json
 from datetime import date, datetime, timezone
+from pathlib import Path
 
 import config
 from gmail_client import Email
-from models import Offer
+from models import Offer, VerifiedOffer
 
 
 def load_seen_ids() -> set[str]:
@@ -45,3 +46,41 @@ def append_offers(
                 }
             )
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+# --- Verification stage (Part 2) ---
+
+def verified_path_for_today() -> Path:
+    return config.RESULTS_DIR / f"verified_{date.today().isoformat()}.jsonl"
+
+
+def latest_results_file() -> Path | None:
+    """Most recent results/run_*.jsonl, or None if there are none."""
+    files = sorted(config.RESULTS_DIR.glob("run_*.jsonl"))
+    return files[-1] if files else None
+
+
+def load_offers(path: Path) -> list[dict]:
+    """Read an offers JSONL file into a list of dicts."""
+    offers: list[dict] = []
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                offers.append(json.loads(line))
+    return offers
+
+
+def append_verified(path: Path, verified: VerifiedOffer) -> None:
+    """Append one verified-offer row (offer + verification + passed)."""
+    config.RESULTS_DIR.mkdir(exist_ok=True)
+    now = datetime.now(timezone.utc).isoformat()
+    record = {
+        **verified.offer,
+        "verification": verified.verification.model_dump(mode="json"),
+        "passed": verified.passed,
+        "verifier_model": config.VERIFIER_MODEL,
+        "verified_at": now,
+    }
+    with open(path, "a") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")

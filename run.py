@@ -15,6 +15,7 @@ import config
 import gmail_client
 import storage
 from analyzer import AnalysisError, analyze_email, load_profile
+from ollama_check import check_ollama
 
 
 def main() -> None:
@@ -33,6 +34,7 @@ def main() -> None:
     profile_version = str(profile.get("version", "unknown"))
     seen = storage.load_seen_ids()
     ollama = Client(host=config.OLLAMA_HOST)
+    check_ollama(ollama)
 
     print(f"Query: {config.GMAIL_QUERY!r} | model: {config.OLLAMA_MODEL} "
           f"| profile v{profile_version}{' | DRY RUN' if args.dry_run else ''}")

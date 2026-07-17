@@ -44,14 +44,27 @@ Notes:
 ## Step 2 — Ollama + Qwen (one-time)
 
 1. Install Ollama: <https://ollama.com/download> (or `brew install ollama`).
-2. Start it (the desktop app runs it automatically, or run `ollama serve`).
-3. Pull the model:
+2. Start it (the desktop app runs it automatically, or run `brew services start ollama`).
+3. **Check the version** — Qwen 3.6 needs Ollama **0.17+** (0.31+ recommended):
+
+   ```bash
+   ollama --version
+   ```
+
+   If you're on an old Homebrew install (e.g. 0.14.x), upgrade:
+
+   ```bash
+   brew upgrade ollama
+   brew services restart ollama
+   ```
+
+4. Pull the model:
 
    ```bash
    ollama pull qwen3.6:35b-a3b
    ```
 
-4. Check the exact tag and make sure `OLLAMA_MODEL` in [config.py](config.py)
+5. Check the exact tag and make sure `OLLAMA_MODEL` in [config.py](config.py)
    matches it:
 
    ```bash
@@ -129,7 +142,8 @@ which profile version scored it). Then re-run and compare verdicts.
 | `Missing credentials.json` on start | Complete Step 1 and put the file in the project root. |
 | Browser consent screen shows "app not verified" | Expected in test mode — click *Continue* (you added yourself as a test user). |
 | `invalid_grant` / auth errors after ~7 days | Test-mode tokens expire. Delete `token.json` and re-run to re-consent. |
-| Connection refused to `localhost:11434` | Ollama isn't running — start the app or `ollama serve`. |
+| Connection refused to `localhost:11434` | Ollama isn't running — start the app or `brew services start ollama`. |
+| `unable to load model` (500) for `qwen3.6:35b-a3b` | Ollama is too old for the `qwen35moe` architecture. Upgrade and restart: `brew upgrade ollama && brew services restart ollama`. Confirm with `ollama --version` (need 0.17+; 0.31+ recommended). Temporary fallback: set `OLLAMA_MODEL = "qwen2.5:7b"` in `config.py`. |
 | `model not found` from Ollama | The tag in `config.py` doesn't match `ollama list`. Pull the model or fix `OLLAMA_MODEL`. |
 | Model returns invalid JSON twice (`ERROR` lines) | Occasional with local models; those emails are *not* marked seen and retry next run. Frequent failures usually mean the model tag points at a non-instruct model. |
 | Run is slow | Normal for a first pass on a big week. Use `--limit` while testing; the full weekly batch is meant to run unattended. |
@@ -146,3 +160,6 @@ python run.py --dry-run       # experiment without writing state
 
 That's the whole MVP loop: run, inspect the JSONL, tweak
 `interest_profile.yaml`, repeat.
+
+For a detailed breakdown of each pipeline step and how the model/prompts work,
+see [HOW_IT_WORKS.md](HOW_IT_WORKS.md).

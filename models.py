@@ -35,3 +35,33 @@ class EmailAnalysis(BaseModel):
     """What one Qwen call must return. Empty list = nothing relevant."""
 
     offers: list[Offer]
+
+
+class Evidence(BaseModel):
+    """A single piece of supporting evidence gathered during verification."""
+
+    source_url: str | None = None
+    snippet: str
+
+
+class VerificationVerdict(BaseModel):
+    """Structured output of the deal-verification agentic loop."""
+
+    is_genuine: bool  # is the discount/deal real, not fake or inflated?
+    authenticity_reason: str
+    quality_score: float = Field(ge=0.0, le=1.0)  # how good is the product?
+    quality_reason: str
+    evidence: list[Evidence] = []
+    recommend: bool
+
+
+class VerifiedOffer(BaseModel):
+    """One row in results/verified_*.jsonl: original offer + verification.
+
+    The original offer fields are carried as a dict so this stays decoupled
+    from provenance fields already baked into the results JSONL.
+    """
+
+    offer: dict
+    verification: VerificationVerdict
+    passed: bool

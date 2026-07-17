@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import yaml
 from ollama import Client
+from ollama._types import ResponseError
 from pydantic import ValidationError
 
 import config
@@ -67,12 +68,17 @@ def analyze_email(client: Client, profile: dict, email: Email) -> EmailAnalysis:
 
     last_error: Exception | None = None
     for attempt in range(2):
-        resp = client.chat(
-            model=config.OLLAMA_MODEL,
-            messages=messages,
-            format=schema,
-            options={"temperature": 0.1},
-        )
+        try:
+            resp = client.chat(
+                model=config.OLLAMA_MODEL,
+                messages=messages,
+                format=schema,
+                options={"temperature": 0.1},
+            )
+        except ResponseError as e:
+            raise AnalysisError(
+                f"Ollama request failed for message {email.message_id}: {e}"
+            ) from e
         content = resp["message"]["content"]
         try:
             return EmailAnalysis.model_validate_json(content)
