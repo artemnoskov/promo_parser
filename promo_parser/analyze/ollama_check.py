@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import logging
 import sys
 
 from ollama import Client
 from ollama._types import ResponseError
 
-import config
+from promo_parser import config
+
+log = logging.getLogger(__name__)
 
 
 def check_ollama(client: Client | None = None, model: str | None = None) -> None:
@@ -20,6 +23,7 @@ def check_ollama(client: Client | None = None, model: str | None = None) -> None
     client = client or Client(host=config.OLLAMA_HOST)
     model = model or config.OLLAMA_MODEL
 
+    log.debug("Pinging Ollama at %s", config.OLLAMA_HOST)
     try:
         client.list()
     except Exception as e:
@@ -31,6 +35,7 @@ def check_ollama(client: Client | None = None, model: str | None = None) -> None
             f"Details: {e}"
         )
 
+    log.debug("Verifying model %r loads (tiny test chat)", model)
     try:
         client.chat(
             model=model,
