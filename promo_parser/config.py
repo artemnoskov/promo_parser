@@ -35,11 +35,11 @@ VERIFIER_MODEL = "qwen3.6:35b-a3b"
 SEARCH_PROVIDER = "tavily"
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")  # set in .env (see .env.example)
 # Max tool-call iterations per offer before forcing a best-effort verdict.
-MAX_VERIFY_ITERS = 5
+MAX_VERIFY_ITERS = 3
 # An offer "passes" if it is genuine and quality_score >= this threshold.
 QUALITY_THRESHOLD = 0.6
 # How many search results to feed the model per tool call.
-SEARCH_MAX_RESULTS = 5
+SEARCH_MAX_RESULTS = 3
 
 # --- Profile ---
 PROFILE_PATH = BASE_DIR / "interest_profile.yaml"

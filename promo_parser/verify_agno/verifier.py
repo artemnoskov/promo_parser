@@ -36,8 +36,8 @@ def _import_agno():
         from agno.models.ollama import Ollama
     except ImportError as e:
         raise VerificationError(
-            "The 'agno' package is required for --engine agno. Install it with:\n"
-            "  pip install -r requirements-agno.txt"
+            f"Missing dependency for --engine agno: {e.name or e}\n"
+            f"Try: pip install -r requirements-agno.txt"
         ) from e
     return Agent, Ollama
 

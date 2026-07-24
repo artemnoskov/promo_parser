@@ -6,3 +6,4 @@
 #
 # Reuses ollama / pydantic / tavily-python already pinned in requirements.txt.
 agno>=1.0.0
+openai
