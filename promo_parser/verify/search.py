@@ -7,7 +7,12 @@ sent to the search API; raw email content never leaves the machine here.
 
 from __future__ import annotations
 
-import config
+import logging
+import time
+
+from promo_parser import config
+
+log = logging.getLogger(__name__)
 
 
 class SearchError(Exception):
@@ -29,7 +34,7 @@ class SearchClient:
             raise SearchError(f"Unsupported search provider: {self.provider!r}")
         if not self.api_key:
             raise SearchError(
-                "TAVILY_API_KEY is not set. Add it to .env (see .env)."
+                "TAVILY_API_KEY is not set. Add it to .env (see .env.example)."
             )
         try:
             from tavily import TavilyClient
@@ -42,6 +47,8 @@ class SearchClient:
 
     def _search(self, query: str) -> list[dict]:
         client = self._get_client()
+        log.debug("Search (%s): %r", self.provider, query)
+        started = time.perf_counter()
         try:
             resp = client.search(
                 query=query,
@@ -50,7 +57,7 @@ class SearchClient:
             )
         except Exception as e:  # provider-specific errors vary; normalize them
             raise SearchError(f"Search failed for {query!r}: {e}") from e
-        return [
+        results = [
             {
                 "title": r.get("title", ""),
                 "url": r.get("url", ""),
@@ -58,6 +65,11 @@ class SearchClient:
             }
             for r in resp.get("results", [])
         ]
+        log.debug(
+            "Search returned %d result(s) in %.1fs for %r",
+            len(results), time.perf_counter() - started, query,
+        )
+        return results
 
     def find_price_info(self, product: str) -> list[dict]:
         """Search for typical/current price to judge if a discount is real."""
