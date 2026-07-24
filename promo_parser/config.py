@@ -33,7 +33,7 @@ VERIFY_ENGINE = "manual"
 VERIFIER_MODEL = "qwen3.6:35b-a3b"
 # Web search provider for gathering price/quality evidence.
 SEARCH_PROVIDER = "tavily"
-TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "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")
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")  # set in .env (see .env.example)
 # Max tool-call iterations per offer before forcing a best-effort verdict.
 MAX_VERIFY_ITERS = 5
 # An offer "passes" if it is genuine and quality_score >= this threshold.

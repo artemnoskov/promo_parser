@@ -34,7 +34,7 @@ class SearchClient:
             raise SearchError(f"Unsupported search provider: {self.provider!r}")
         if not self.api_key:
             raise SearchError(
-                "TAVILY_API_KEY is not set. Add it to .env (see .env)."
+                "TAVILY_API_KEY is not set. Add it to .env (see .env.example)."
             )
         try:
             from tavily import TavilyClient
