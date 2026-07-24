@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import logging
 import sys
 from dataclasses import dataclass
 
@@ -12,7 +13,9 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-import config
+from promo_parser import config
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -30,12 +33,14 @@ def get_service():
     """Return an authenticated Gmail API service, running OAuth if needed."""
     creds = None
     if config.TOKEN_PATH.exists():
+        log.debug("Loading cached OAuth token from %s", config.TOKEN_PATH)
         creds = Credentials.from_authorized_user_file(
             str(config.TOKEN_PATH), config.GMAIL_SCOPES
         )
 
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
+            log.info("Refreshing expired Gmail OAuth token")
             creds.refresh(Request())
         else:
             if not config.CREDENTIALS_PATH.exists():
@@ -43,19 +48,25 @@ def get_service():
                     f"Missing {config.CREDENTIALS_PATH.name}. Download an OAuth "
                     "Desktop-app client JSON from Google Cloud Console (see README)."
                 )
+            log.info("No valid token; starting OAuth consent flow in your browser")
             flow = InstalledAppFlow.from_client_secrets_file(
                 str(config.CREDENTIALS_PATH), config.GMAIL_SCOPES
             )
             creds = flow.run_local_server(port=0)
         config.TOKEN_PATH.write_text(creds.to_json())
+        log.debug("Wrote refreshed token to %s", config.TOKEN_PATH)
+    else:
+        log.debug("Cached Gmail token is valid")
 
     return build("gmail", "v1", credentials=creds)
 
 
 def list_message_ids(service, query: str = config.GMAIL_QUERY) -> list[str]:
     """List message IDs matching the query, paginating as needed."""
+    log.debug("Listing message ids for query %r (cap %d)", query, config.MAX_EMAILS_PER_RUN)
     ids: list[str] = []
     page_token = None
+    page = 0
     while True:
         resp = (
             service.users()
@@ -63,7 +74,9 @@ def list_message_ids(service, query: str = config.GMAIL_QUERY) -> list[str]:
             .list(userId="me", q=query, maxResults=100, pageToken=page_token)
             .execute()
         )
+        page += 1
         ids.extend(m["id"] for m in resp.get("messages", []))
+        log.debug("  page %d: %d id(s) so far", page, len(ids))
         page_token = resp.get("nextPageToken")
         if not page_token or len(ids) >= config.MAX_EMAILS_PER_RUN:
             break
@@ -99,7 +112,9 @@ def _extract_body(payload: dict) -> str:
         return plain
     html = _find_part(payload, "text/html")
     if html:
+        log.debug("No text/plain part; falling back to stripped text/html")
         return BeautifulSoup(html, "html.parser").get_text(separator="\n", strip=True)
+    log.debug("No text/plain or text/html body part found")
     return ""
 
 

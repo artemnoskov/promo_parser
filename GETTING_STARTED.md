@@ -64,8 +64,8 @@ Notes:
    ollama pull qwen3.6:35b-a3b
    ```
 
-5. Check the exact tag and make sure `OLLAMA_MODEL` in [config.py](config.py)
-   matches it:
+5. Check the exact tag and make sure `OLLAMA_MODEL` in
+   [config.py](promo_parser/config.py) matches it:
 
    ```bash
    ollama list
@@ -86,13 +86,24 @@ pip install -r requirements.txt
 
 (If a `.venv/` already exists from an earlier setup, just activate it.)
 
+Optional: the Part 2 verification step can also run on the [Agno](https://github.com/agno-agi/agno)
+agent framework (`--engine agno`). It is not needed for the default pipeline;
+install it only if you want to try that engine:
+
+```bash
+pip install -r requirements-agno.txt
+```
+
 ## Step 4 — First run
 
 Start small and safe — analyze 5 emails without writing anything:
 
 ```bash
-python run.py --limit 5 --dry-run
+python scripts/run.py --limit 5 --dry-run
 ```
+
+(Equivalent: `python -m promo_parser.cli.run --limit 5 --dry-run`. Add `-v` to
+watch every step in detail — fetches, prompts, model timings.)
 
 What happens on the first run:
 
@@ -107,7 +118,7 @@ What happens on the first run:
 If that looks sane, do a real run:
 
 ```bash
-python run.py
+python scripts/run.py
 ```
 
 ## Step 5 — Verify
@@ -123,7 +134,7 @@ jq -s 'sort_by(-.score) | .[] | {title, merchant, discount_text, score}' results
 Confirm idempotency — run it again immediately:
 
 ```bash
-python run.py
+python scripts/run.py
 ```
 
 The summary should show everything as already seen and analyze nothing new.
@@ -143,20 +154,26 @@ which profile version scored it). Then re-run and compare verdicts.
 | Browser consent screen shows "app not verified" | Expected in test mode — click *Continue* (you added yourself as a test user). |
 | `invalid_grant` / auth errors after ~7 days | Test-mode tokens expire. Delete `token.json` and re-run to re-consent. |
 | Connection refused to `localhost:11434` | Ollama isn't running — start the app or `brew services start ollama`. |
-| `unable to load model` (500) for `qwen3.6:35b-a3b` | Ollama is too old for the `qwen35moe` architecture. Upgrade and restart: `brew upgrade ollama && brew services restart ollama`. Confirm with `ollama --version` (need 0.17+; 0.31+ recommended). Temporary fallback: set `OLLAMA_MODEL = "qwen2.5:7b"` in `config.py`. |
-| `model not found` from Ollama | The tag in `config.py` doesn't match `ollama list`. Pull the model or fix `OLLAMA_MODEL`. |
+| `unable to load model` (500) for `qwen3.6:35b-a3b` | Ollama is too old for the `qwen35moe` architecture. Upgrade and restart: `brew upgrade ollama && brew services restart ollama`. Confirm with `ollama --version` (need 0.17+; 0.31+ recommended). Temporary fallback: set `OLLAMA_MODEL = "qwen2.5:7b"` in `promo_parser/config.py`. |
+| `model not found` from Ollama | The tag in `promo_parser/config.py` doesn't match `ollama list`. Pull the model or fix `OLLAMA_MODEL`. |
+| `ModuleNotFoundError: No module named 'promo_parser'` | Run from the repo root, or use the `scripts/` wrappers (they add the repo root to `sys.path`). |
 | Model returns invalid JSON twice (`ERROR` lines) | Occasional with local models; those emails are *not* marked seen and retry next run. Frequent failures usually mean the model tag points at a non-instruct model. |
-| Run is slow | Normal for a first pass on a big week. Use `--limit` while testing; the full weekly batch is meant to run unattended. |
+| Run is slow | Normal for a first pass on a big week. Use `--limit` while testing; the full weekly batch is meant to run unattended. Add `-v` to see which step it's on (fetch vs model call vs search) and the per-call timings. |
+| Want to see exactly what's happening | Add `-v` / `--verbose` to either command for DEBUG logging (per-message detail, prompts, search queries, tool calls, timings). Logs go to stderr, so redirect with `2> run.log` if you want to save them. |
 | Want to reprocess everything from scratch | Delete `seen_ids.json` (and optionally `results/`). |
 
 ## Day-to-day usage
 
 ```bash
 source .venv/bin/activate
-python run.py                 # weekly manual run
-python run.py --limit 10      # quick test after tweaking the profile
-python run.py --dry-run       # experiment without writing state
+python scripts/run.py                 # weekly manual run
+python scripts/run.py --limit 10      # quick test after tweaking the profile
+python scripts/run.py --dry-run       # experiment without writing state
+python scripts/run.py -v              # verbose DEBUG logging to watch each step
 ```
+
+All commands run from the repo root. `python -m promo_parser.cli.run` is
+equivalent to `python scripts/run.py` (same for `verify`).
 
 That's the whole MVP loop: run, inspect the JSONL, tweak
 `interest_profile.yaml`, repeat.

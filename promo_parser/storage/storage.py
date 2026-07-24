@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import date, datetime, timezone
 from pathlib import Path
 
-import config
-from gmail_client import Email
-from models import Offer, VerifiedOffer
+from promo_parser import config
+from promo_parser.gmail.client import Email
+from promo_parser.models import Offer, VerifiedOffer
+
+log = logging.getLogger(__name__)
 
 
 def load_seen_ids() -> set[str]:
@@ -31,7 +34,8 @@ def append_offers(
     """Append one JSON line per offer, enriched with provenance fields."""
     config.RESULTS_DIR.mkdir(exist_ok=True)
     now = datetime.now(timezone.utc).isoformat()
-    with open(results_path_for_today(), "a") as f:
+    path = results_path_for_today()
+    with open(path, "a") as f:
         for offer in offers:
             record = offer.model_dump(mode="json")
             record.update(
@@ -46,6 +50,7 @@ def append_offers(
                 }
             )
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    log.debug("Appended %d offer(s) for %s to %s", len(offers), email.message_id, path)
 
 
 # --- Verification stage (Part 2) ---
@@ -84,3 +89,4 @@ def append_verified(path: Path, verified: VerifiedOffer) -> None:
     }
     with open(path, "a") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    log.debug("Appended verified offer (passed=%s) to %s", verified.passed, path)

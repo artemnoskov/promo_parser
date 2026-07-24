@@ -16,3 +16,9 @@ venv/
 # IDE
 .idea/
 .vscode/
+
+# Local docs
+docs/
+
+# Diagrams
+*.drawio

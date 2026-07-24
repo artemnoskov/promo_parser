@@ -1,0 +1,8 @@
+# Optional dependency for the Agno-based verification engine (Part 2).
+# Only needed when running: python scripts/verify.py --engine agno
+#
+# Install alongside the base requirements:
+#   pip install -r requirements.txt -r requirements-agno.txt
+#
+# Reuses ollama / pydantic / tavily-python already pinned in requirements.txt.
+agno>=1.0.0
